@@ -9,6 +9,8 @@ import { useWebSocket } from "../context/WebSocketContext"
 import { ChatNavbar } from "./ChatNavbar"
 import MarkdownPreview from "@uiw/react-markdown-preview"
 import rehypeExternalLinks from 'rehype-external-links'
+import { Toaster } from "./ui/sonner"
+import { toast } from "sonner"
 
 interface Message {
   content: string
@@ -113,6 +115,23 @@ export function Chat() {
   useEffect(() => {
     if (lastMessage === 'repo_processed' && !welcomeMessageShownRef.current) {
       welcomeMessageShownRef.current = true;
+      // Use Sonner's success toast for repo processed
+      toast.success("Repository processed!", {
+        position: "top-center",
+        style: {
+          background: "#bde851",
+          color: "#222",
+          fontWeight: 600,
+          borderRadius: 12,
+          boxShadow: "0 2px 16px 0 rgba(0,0,0,0.08)",
+          maxWidth: "400px",
+          width: "100%",
+          textAlign: "center",
+          padding: "0.75rem 1.5rem",
+          margin: "0 auto",
+        },
+        duration: 3200,
+      });
       addMessage("Hello! I've analyzed this repository. What would you like to know?", 'assistant');
     } else if (lastMessage && lastMessage !== 'repo_processed') {
       addMessage(lastMessage, 'assistant');
@@ -254,6 +273,7 @@ export function Chat() {
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-background">
+      <Toaster richColors={false} />
       <ChatNavbar 
         onNewChat={() => {
           setMessages([])
