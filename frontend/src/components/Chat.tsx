@@ -117,7 +117,7 @@ export function Chat() {
       welcomeMessageShownRef.current = true;
       // Use Sonner's success toast for repo processed
       toast.success("Repository processed!", {
-        position: "top-center",
+        position: "bottom-right",
         style: {
           background: "#bde851",
           color: "#222",
@@ -125,10 +125,9 @@ export function Chat() {
           borderRadius: 12,
           boxShadow: "0 2px 16px 0 rgba(0,0,0,0.08)",
           maxWidth: "400px",
-          width: "100%",
+          width: "auto",
           textAlign: "center",
           padding: "0.75rem 1.5rem",
-          margin: "0 auto",
         },
         duration: 3200,
       });
