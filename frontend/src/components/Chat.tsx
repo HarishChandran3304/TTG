@@ -168,7 +168,7 @@ export function Chat() {
         behavior: 'smooth'
       });
     }
-  };
+  }
 
   useEffect(() => {
     scrollToBottom()
@@ -305,8 +305,15 @@ export function Chat() {
             {/* Repository Processing Message */}
             {isProcessing && (
               <div className="flex justify-center mb-8">
-                <Card className="p-4 rounded-2xl border-2 border-border bg-secondary-background/50 shadow-shadow animate-pulse">
-                  <p className="text-[15px] text-foreground">Processing repository... This may take a few seconds.</p>
+                <Card className="p-4 rounded-2xl border-2 border-border bg-secondary-background/50 shadow-shadow animate-pulse flex items-center gap-3">
+                  <p className="text-[15px] text-foreground flex items-center gap-2">
+                    Processing repository...
+                    {/* Spinner */}
+                    <svg className="animate-spin h-5 w-5 text-black ml-2" viewBox="0 0 24 24">
+                      <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" />
+                    </svg>
+                  </p>
                 </Card>
               </div>
             )}
