@@ -1,6 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.utils.cache import load_repo_cache, save_repo_cache
 from src.utils.ingest import ingest_repo  # type: ignore
 from src.utils.llm import generate_response  # type: ignore
 from src.utils.prompt import generate_prompt  # type: ignore
@@ -71,34 +72,42 @@ class ConnectionManager:
 
         repo_url = f"https://github.com/{owner}/{repo}"
         logging.info(f"Processing repo: {repo_url}...")
-        try:
-            summary, tree, content = await ingest_repo(repo_url)
-            logging.info(f"Repo processed - {repo_url}!")
-            logging.info(f"Repository Summary:\n{summary}")
+        # Try to load from cache first
+        cached = load_repo_cache(owner, repo)
+        if cached:
+            summary, tree, content = cached["summary"], cached["tree"], cached["content"]
+            logging.info(f"Loaded repo from cache: {repo_url}")
+        else:
+            try:
+                summary, tree, content = await ingest_repo(repo_url)
+                logging.info(f"Repo processed - {repo_url}!")
+                logging.info(f"Repository Summary:\n{summary}")
+                save_repo_cache(owner, repo, summary, tree, content)
+            except ValueError as e:
+                error_msg = str(e)
+                if error_msg == "error:repo_too_large":
+                    await websocket.send_text("error:repo_too_large")
+                elif error_msg == "error:repo_not_found":
+                    await websocket.send_text("error:repo_not_found")
+                elif error_msg == "error:repo_private":
+                    await websocket.send_text("error:repo_private")
+                else:
+                    raise
+                await websocket.close()
+                return
 
-            self.active_connections[client_id] = {
-                "websocket": websocket,
-                "history": [],
-                "owner": owner,
-                "repo": repo,
-                "summary": summary,
-                "tree": tree,
-                "content": content,
-            }
+        self.active_connections[client_id] = {
+            "websocket": websocket,
+            "history": [],
+            "owner": owner,
+            "repo": repo,
+            "summary": summary,
+            "tree": tree,
+            "content": content,
+        }
 
-            # Send confirmation that repo is processed
-            await websocket.send_text("repo_processed")
-        except ValueError as e:
-            error_msg = str(e)
-            if error_msg == "error:repo_too_large":
-                await websocket.send_text("error:repo_too_large")
-            elif error_msg == "error:repo_not_found":
-                await websocket.send_text("error:repo_not_found")
-            elif error_msg == "error:repo_private":
-                await websocket.send_text("error:repo_private")
-            else:
-                raise
-            await websocket.close()
+        # Send confirmation that repo is processed
+        await websocket.send_text("repo_processed")
 
     async def disconnect(self, client_id: str) -> None:
         if client_id in self.active_connections:
