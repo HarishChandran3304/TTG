@@ -10,17 +10,14 @@ You can also add the `talkto` prefix to any GitHub repository URL.
 
 <h2>Watch TTG in Action</h2>
 
-https://github.com/user-attachments/assets/b1c22166-e845-4641-988d-4ef7090b85a2
-
-
 <video>
   <source src='./frontend/public/TTG-demo-final.mp4' type='video/mp4'>
   Your browser does not support the video tag.
 </video>
 
 ## Roadmap
-- [ ] Repo and query caching
-- [ ] Support individual files and folders
+- [x] Repo and query caching
+- [ ] Support for individual files and folders
 - [ ] Support for local files
 - [ ] Support for larger repositories (>1M tokens)
 - [ ] Streaming responses
