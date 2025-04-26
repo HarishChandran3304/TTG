@@ -10,10 +10,7 @@ You can also add the `talkto` prefix to any GitHub repository URL.
 
 <h2>Watch TTG in Action</h2>
 
-<video>
-  <source src='./frontend/public/TTG-demo-final.mp4' type='video/mp4'>
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/9b1b9dd3-546f-41ca-817f-531314452073
 
 ## Roadmap
 - [x] Repo and query caching
