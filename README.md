@@ -2,6 +2,8 @@
 
 [![Image](./frontend/public/header.png "TalkToGitHub main page")](https://talktogithub.com)
 
+<a href="https://www.producthunt.com/posts/talktogithub?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-talktogithub" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=957930&theme=light&t=1745741597937" alt="TalkToGitHub - Turn&#0032;GitHub&#0032;repositories&#0032;into&#0032;conversations | Product Hunt" style="width: 200px; height: 45px;" width="200" height="45" /></a>
+
 [![Discord](https://dcbadge.limes.pink/api/server/https://discord.com/invite/JKtHeSn4S7)](https://discord.com/invite/JKtHeSn4S7)
 
 Chat with any GitHub repository within seconds.

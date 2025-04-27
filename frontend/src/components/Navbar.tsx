@@ -23,7 +23,7 @@ export function Navbar() {
           </Link>
 
           {/* Social Links */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <a
               href="https://github.com/HarishChandran3304/TTG"
               target="_blank"
@@ -43,6 +43,10 @@ export function Navbar() {
                   <span className="text-sm sm:text-base">{stars}</span>
                 </span>
               ) : null}
+            </a>
+            {/* Product Hunt badge */}
+            <a href="https://www.producthunt.com/posts/talktogithub?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-talktogithub" target="_blank" rel="noopener noreferrer" aria-label="View TalkToGitHub on Product Hunt">
+              <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=957930&theme=light&t=1745739901153" alt="TalkToGitHub - Turn GitHub repositories into conversations | Product Hunt" style={{ width: 180, height: 40 }} width={180} height={40} />
             </a>
           </div>
         </div>
