@@ -68,6 +68,7 @@ export const MarkdownCode = ({ inline, children = [], className, ...props }: any
           style={{
             width: '100%',
             minHeight: 120,
+            height: 600,
             maxWidth: 700,
             margin: '0 auto',
             overflow: 'auto',
