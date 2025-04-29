@@ -11,6 +11,7 @@ import MarkdownPreview from "@uiw/react-markdown-preview"
 import rehypeExternalLinks from 'rehype-external-links'
 import { Toaster } from "./ui/sonner"
 import { toast } from "sonner"
+import { MarkdownCode } from "./MarkdownCode"
 
 interface Message {
   content: string
@@ -345,6 +346,9 @@ export function Chat() {
                         className="text-[14px] sm:text-[15px] [&_pre]:overflow-x-auto [&_pre]:p-3 [&_code]:text-sm [&_p]:break-words [&_p]:whitespace-pre-wrap"
                         wrapperElement={{
                           'data-color-mode': 'light'
+                        }}
+                        components={{
+                          code: MarkdownCode
                         }}
                       />
                     </div>
