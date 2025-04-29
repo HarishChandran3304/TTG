@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, Fragment, useCallback } from "react";
+import { useState, useRef, useEffect, Fragment, useCallback } from "react";
 import { getCodeString } from "rehype-rewrite";
 import mermaid from "mermaid";
 import panzoom from "panzoom";
