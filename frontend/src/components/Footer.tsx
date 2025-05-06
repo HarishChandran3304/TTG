@@ -16,7 +16,7 @@ export function Footer() {
           </a>
           <div className="text-foreground/80 text-center text-xs sm:text-sm">
             Made with ❤️ by
-            <a href="https://x.com/HarishChan3304" target="_blank" rel="noopener noreferrer">
+            <a href="https://x.com/harishfelloff" target="_blank" rel="noopener noreferrer">
               <span className="text-main"> Harish</span>
             </a>
           </div>
