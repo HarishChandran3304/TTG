@@ -127,10 +127,10 @@ class ConnectionManager:
             history = self.active_connections[client_id]["history"]
 
             logging.info(f"Generating prompt for query: {query}...")
-            prompt = await generate_prompt(query, history, tree, content)
-            logging.info(f"Prompt generated: {prompt[:100]}...")
+            prompt_data = await generate_prompt(query, history, tree, content)
+            logging.info(f"Prompt generated successfully")
             try:
-                response = await generate_response(prompt)
+                response = await generate_response(prompt_data)
                 logging.info(f"Response generated: {response}")
                 await self.active_connections[client_id]["websocket"].send_text(
                     response
@@ -143,7 +143,11 @@ class ConnectionManager:
                         error_msg
                     )
                 else:
-                    raise
+                    logging.error(f"Error generating response: {str(e)}")
+                    error_msg = f"An error occurred: {str(e)}"
+                    await self.active_connections[client_id]["websocket"].send_text(
+                        error_msg
+                    )
 
     async def get_history(self, client_id: str) -> list[tuple[str, str]]:
         if client_id in self.active_connections:
