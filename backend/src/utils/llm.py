@@ -1,7 +1,10 @@
-from google import genai  # type: ignore
+from certifi import contents
+from google import genai
 from dotenv import load_dotenv
 import os
 from typing import Optional
+
+from google.genai.chats import Chats, Chat, AsyncChat
 
 load_dotenv()
 
@@ -57,6 +60,48 @@ class KeyManager:
 key_manager = KeyManager()
 
 
+async def initialize_chat(prompt_context: str) -> AsyncChat:
+    while True:
+        try:
+            chat = key_manager.client.aio.chats.create(model=os.getenv("GEMINI_MODEL"))
+            await chat.send_message(prompt_context)
+            print(f"Chat {chat} initialized.")
+            return chat
+        except Exception as e:
+            if "RESOURCE_EXHAUSTED" in str(e):
+                next_key = key_manager.get_next_key()
+                if next_key is None:
+                    # Reset the key manager for future requests
+                    key_manager.reset()
+                    raise ValueError(
+                        "OUT_OF_KEYS: All available API keys have been exhausted"
+                    )
+                # Continue the loop with the new key
+                continue
+            # If it's not a RESOURCE_EXHAUSTED error, re-raise it
+            raise
+
+
+async def send_chat_message(chat: AsyncChat, prompt: str) -> str:
+    while True:
+        try:
+            response = await chat.send_message(prompt)
+            return response.text
+        except Exception as e:
+            if "RESOURCE_EXHAUSTED" in str(e):
+                next_key = key_manager.get_next_key()
+                if next_key is None:
+                    # Reset the key manager for future requests
+                    key_manager.reset()
+                    raise ValueError(
+                        "OUT_OF_KEYS: All available API keys have been exhausted"
+                    )
+                # Continue the loop with the new key
+                continue
+            # If it's not a RESOURCE_EXHAUSTED error, re-raise it
+            raise
+
+
 async def generate_response(prompt: str) -> str:
     """
     Generate a response from the LLM.
@@ -75,6 +120,7 @@ async def generate_response(prompt: str) -> str:
             response = await key_manager.client.aio.models.generate_content(
                 model=os.getenv("GEMINI_MODEL"), contents=prompt
             )
+
             return response.text
         except Exception as e:
             if "RESOURCE_EXHAUSTED" in str(e):

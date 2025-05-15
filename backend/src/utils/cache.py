@@ -1,10 +1,10 @@
-import os
 import json
+import os
 from typing import Any
-import time
 
 CACHE_DIR = "/tmp/repo_cache"
-CACHE_TTL_SECONDS = 6 * 60 * 60  # 6 hours
+# CACHE_TTL_SECONDS = 6 * 60 * 60  # 6 hours
+CACHE_TTL_SECONDS = 0
 CACHE_MAX_FILES = 100
 
 def _enforce_lru_cache_limit():

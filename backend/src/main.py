@@ -1,22 +1,20 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.utils.cache import load_repo_cache, save_repo_cache
-from src.utils.ingest import ingest_repo  # type: ignore
-from src.utils.llm import generate_response  # type: ignore
-from src.utils.prompt import generate_prompt  # type: ignore
-
 from typing import Any
 
 import os
 from dotenv import load_dotenv
 import logging
 
+from src.utils.cache import load_repo_cache, save_repo_cache
+from src.utils.ingest import ingest_repo
+from src.utils.llm import initialize_chat, send_chat_message, generate_response
+from src.utils.prompt import generate_prompt
 
 load_dotenv()
 
 IS_PROD = os.getenv("ENV") == "production"
-
 
 app = FastAPI(
     title="Talk to GitHub",
@@ -62,48 +60,55 @@ class ConnectionManager:
 		"""
 
     async def connect(
-        self, websocket: WebSocket, client_id: str, owner: str, repo: str
+            self, websocket: WebSocket, client_id: str, owner: str, repo: str
     ) -> None:
         await websocket.accept()
 
         if client_id in self.active_connections:
             await self.active_connections[client_id]["websocket"].close()
             del self.active_connections[client_id]
-
-        repo_url = f"https://github.com/{owner}/{repo}"
-        logging.info(f"Processing repo: {repo_url}...")
         # Try to load from cache first
-        cached = load_repo_cache(owner, repo)
-        if cached:
-            summary, tree, content = cached["summary"], cached["tree"], cached["content"]
-            logging.info(f"Loaded repo from cache: {repo_url}")
-        else:
-            try:
-                summary, tree, content = await ingest_repo(repo_url)
-                logging.info(f"Repo processed - {repo_url}!")
-                logging.info(f"Repository Summary:\n{summary}")
-                save_repo_cache(owner, repo, summary, tree, content)
-            except ValueError as e:
-                error_msg = str(e)
-                if error_msg == "error:repo_too_large":
-                    await websocket.send_text("error:repo_too_large")
-                elif error_msg == "error:repo_not_found":
-                    await websocket.send_text("error:repo_not_found")
-                elif error_msg == "error:repo_private":
-                    await websocket.send_text("error:repo_private")
-                else:
-                    raise
-                await websocket.close()
-                return
+        # cached = load_repo_cache(owner, repo)
+        # if cached:
+        #     summary, tree, content = cached["summary"], cached["tree"], cached["content"]
+        #     logging.info(f"Loaded repo from cache: {owner}-{repo}")
+        # else:
+        #     try:
+        #         summary, tree, content = await ingest_repo(owner, repo)
+        #         logging.info(f"Repo processed - {owner}-{repo}!")
+        #         logging.info(f"Repository Summary:\n{summary}")
+        #         save_repo_cache(owner, repo, summary, tree, tree)
+        #     except ValueError as e:
+        #         error_msg = str(e)
+        #         if error_msg == "error:repo_too_large":
+        #             await websocket.send_text("error:repo_too_large")
+        #         elif error_msg == "error:repo_not_found":
+        #             await websocket.send_text("error:repo_not_found")
+        #         elif error_msg == "error:repo_private":
+        #             await websocket.send_text("error:repo_private")
+        #         else:
+        #             raise
+        #         await websocket.close()
+        #         return
+
+        # cached = load_repo_cache(owner, repo)
+        # summary, tree, content = cached["summary"], cached["tree"], cached["content"]
+        prompt = await generate_prompt("Please response in korean.", [], "테스트", "테스트")
+        print(f"====================prompt initialized.")
+        print(prompt)
+        chat = await initialize_chat(prompt)
+        print(f"====================chat initialized.")
+        print(chat)
 
         self.active_connections[client_id] = {
             "websocket": websocket,
             "history": [],
             "owner": owner,
             "repo": repo,
-            "summary": summary,
-            "tree": tree,
-            "content": content,
+            # "summary": summary,
+            # "tree": tree,
+            # "content": content,
+            "chat": chat
         }
 
         # Send confirmation that repo is processed
@@ -119,18 +124,11 @@ class ConnectionManager:
             await self.active_connections[client_id]["websocket"].send_text("pong")
         else:
             query = text
-            owner = self.active_connections[client_id]["owner"]  # noqa: F841
-            repo = self.active_connections[client_id]["repo"]  # noqa: F841
-            summary = self.active_connections[client_id]["summary"]  # noqa: F841
-            tree = self.active_connections[client_id]["tree"]
-            content = self.active_connections[client_id]["content"]
-            history = self.active_connections[client_id]["history"]
+            chat = self.active_connections[client_id]["chat"]
 
             logging.info(f"Generating prompt for query: {query}...")
-            prompt = await generate_prompt(query, history, tree, content)
-            logging.info(f"Prompt generated: {prompt[:100]}...")
             try:
-                response = await generate_response(prompt)
+                response = await send_chat_message(chat, query)
                 logging.info(f"Response generated: {response}")
                 await self.active_connections[client_id]["websocket"].send_text(
                     response
@@ -156,7 +154,7 @@ manager = ConnectionManager()
 
 @app.websocket("/{owner}/{repo}/{client_id}")
 async def websocket_endpoint(
-    websocket: WebSocket, owner: str, repo: str, client_id: str
+        websocket: WebSocket, owner: str, repo: str, client_id: str
 ) -> None:
     try:
         await manager.connect(websocket, client_id, owner, repo)
@@ -181,20 +179,22 @@ async def websocket_endpoint(
         await manager.disconnect(client_id)
         print(f"Client {client_id} disconnected")
 
+
 @app.get("/healthcheck")
 async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
-async def main():
-    summary, tree, content = await ingest_repo("https://github.com/EnhancedJax/Bagels")
-    prompt = await generate_prompt(
-        "How does this codebase work? What is it built using?", [], tree, content
-    )
-    response = await generate_response(prompt)
-    print(response)
 
-
-if __name__ == "__main__":
-    import asyncio
-
-    asyncio.run(main())
+# async def main():
+#     summary, tree, content = await ingest_repo("https://github.com/EnhancedJax/Bagels")
+#     prompt = await generate_prompt(
+#         "How does this codebase work? What is it built using?", [], tree, content
+#     )
+#     response = await generate_response(prompt)
+#     print(response)
+#
+#
+# if __name__ == "__main__":
+#     import asyncio
+#
+#     asyncio.run(main())
