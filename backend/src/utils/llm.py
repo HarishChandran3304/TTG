@@ -60,11 +60,11 @@ class KeyManager:
 key_manager = KeyManager()
 
 
-async def initialize_chat(prompt_context: str) -> AsyncChat:
+async def initialize_chat(prompt: str) -> AsyncChat:
     while True:
         try:
             chat = key_manager.client.aio.chats.create(model=os.getenv("GEMINI_MODEL"))
-            await chat.send_message(prompt_context)
+            await chat.send_message(prompt)
             print(f"Chat {chat} initialized.")
             return chat
         except Exception as e:
@@ -121,6 +121,8 @@ async def generate_response(prompt: str) -> str:
                 model=os.getenv("GEMINI_MODEL"), contents=prompt
             )
 
+            print(f"usage metadata: {response.usage_metadata}")
+
             return response.text
         except Exception as e:
             if "RESOURCE_EXHAUSTED" in str(e):
@@ -135,7 +137,6 @@ async def generate_response(prompt: str) -> str:
                 continue
             # If it's not a RESOURCE_EXHAUSTED error, re-raise it
             raise
-
 
 if __name__ == "__main__":
     import asyncio

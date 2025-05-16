@@ -68,32 +68,30 @@ class ConnectionManager:
             await self.active_connections[client_id]["websocket"].close()
             del self.active_connections[client_id]
         # Try to load from cache first
-        # cached = load_repo_cache(owner, repo)
-        # if cached:
-        #     summary, tree, content = cached["summary"], cached["tree"], cached["content"]
-        #     logging.info(f"Loaded repo from cache: {owner}-{repo}")
-        # else:
-        #     try:
-        #         summary, tree, content = await ingest_repo(owner, repo)
-        #         logging.info(f"Repo processed - {owner}-{repo}!")
-        #         logging.info(f"Repository Summary:\n{summary}")
-        #         save_repo_cache(owner, repo, summary, tree, tree)
-        #     except ValueError as e:
-        #         error_msg = str(e)
-        #         if error_msg == "error:repo_too_large":
-        #             await websocket.send_text("error:repo_too_large")
-        #         elif error_msg == "error:repo_not_found":
-        #             await websocket.send_text("error:repo_not_found")
-        #         elif error_msg == "error:repo_private":
-        #             await websocket.send_text("error:repo_private")
-        #         else:
-        #             raise
-        #         await websocket.close()
-        #         return
+        cached = load_repo_cache(owner, repo)
+        if cached:
+            summary, tree, content = cached["summary"], cached["tree"], cached["content"]
+            logging.info(f"Loaded repo from cache: {owner}-{repo}")
+        else:
+            try:
+                summary, tree, content = await ingest_repo(owner, repo)
+                logging.info(f"Repo processed - {owner}-{repo}!")
+                logging.info(f"Repository Summary:\n{summary}")
+                save_repo_cache(owner, repo, summary, tree, tree)
+            except ValueError as e:
+                error_msg = str(e)
+                if error_msg == "error:repo_too_large":
+                    await websocket.send_text("error:repo_too_large")
+                elif error_msg == "error:repo_not_found":
+                    await websocket.send_text("error:repo_not_found")
+                elif error_msg == "error:repo_private":
+                    await websocket.send_text("error:repo_private")
+                else:
+                    raise
+                await websocket.close()
+                return
 
-        # cached = load_repo_cache(owner, repo)
-        # summary, tree, content = cached["summary"], cached["tree"], cached["content"]
-        prompt = await generate_prompt("Please response in korean.", [], "테스트", "테스트")
+        prompt = await generate_prompt("Please response in korean.", [], tree, content)
         print(f"====================prompt initialized.")
         print(prompt)
         chat = await initialize_chat(prompt)
@@ -105,9 +103,9 @@ class ConnectionManager:
             "history": [],
             "owner": owner,
             "repo": repo,
-            # "summary": summary,
-            # "tree": tree,
-            # "content": content,
+            "summary": summary,
+            "tree": tree,
+            "content": content,
             "chat": chat
         }
 
