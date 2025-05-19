@@ -18,7 +18,7 @@ function LandingPage() {
   const [error, setError] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const parseGithubUrl = (url: string): { owner: string; repo: string } | null => {
+  const parseGithubUrl = (url: string): { owner: string; repo: string, subName?: string } | null => {
     try {
       const urlObj = new URL(url)
       if (urlObj.hostname !== 'github.com') {
@@ -28,9 +28,18 @@ function LandingPage() {
       if (pathParts.length < 2) {
         return null
       }
+
+      if (pathParts.length == 2) {
+        return {
+          owner: pathParts[0],
+          repo: pathParts[1]
+        }
+      }
+
       return {
         owner: pathParts[0],
-        repo: pathParts[1]
+        repo: pathParts[1],
+        subName: pathParts[2]
       }
     } catch {
       return null
@@ -43,10 +52,13 @@ function LandingPage() {
       setError("Please enter a valid GitHub repository URL (e.g., https://github.com/owner/repo)")
       return
     }
-    
+
     setIsProcessing(true)
     try {
-      navigate(`/${parsed.owner}/${parsed.repo}`)
+      const to = parsed.subName?
+          `/${parsed.owner}/${parsed.repo}/${parsed.subName}`
+          : `/${parsed.owner}/${parsed.repo}`
+      navigate(to)
     } catch (err) {
       console.error(err)
       setError('Failed to start chat')
@@ -78,15 +90,15 @@ function LandingPage() {
           <h2 className="text-lg sm:text-xl md:text-2xl font-medium text-center mb-8">
             Chat with any public GitHub repository. No more endless docs. Why read when you can ask and get answers instantly? 🚀
           </h2>
-          
+
           <Card className="w-full relative mb-6">
             <div className="absolute -left-3 sm:-left-6 -top-3 sm:-top-6 w-full h-full bg-black -z-10" />
             <CardContent className="p-4 sm:p-6 py-4">
               <div className="flex flex-col gap-6 sm:gap-8">
                 <div className="flex flex-col gap-6 sm:gap-8">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Input 
-                      type="url" 
+                    <Input
+                      type="url"
                       placeholder="https://github.com/username/repo"
                       className={`text-base sm:text-lg py-4 sm:py-6 ${error ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                       value={repoUrl}
@@ -96,8 +108,8 @@ function LandingPage() {
                       }}
                       onKeyDown={handleKeyPress}
                     />
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="text-lg sm:text-xl px-6 sm:px-8 py-4 sm:py-6 whitespace-nowrap cursor-pointer"
                       onClick={handleStartChat}
                       disabled={isProcessing}
@@ -129,11 +141,11 @@ function LandingPage() {
               </HoverCard.Trigger>
               <HoverCard.Portal>
                 <HoverCard.Content className="z-50 w-[300px] sm:w-[400px] rounded-lg border-2 border-border bg-white p-2" sideOffset={5}>
-                  <video 
-                    src={demoVideo} 
-                    autoPlay 
-                    loop 
-                    muted 
+                  <video
+                    src={demoVideo}
+                    autoPlay
+                    loop
+                    muted
                     playsInline
                     className="w-full rounded"
                   />
@@ -157,6 +169,12 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path=":owner/:repo" element={
+            <div className="flex flex-col min-h-screen">
+              <Chat />
+              <Footer />
+            </div>
+          } />
+          <Route path=":owner/:repo/:subName" element={
             <div className="flex flex-col min-h-screen">
               <Chat />
               <Footer />

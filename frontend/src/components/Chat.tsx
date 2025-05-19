@@ -20,7 +20,7 @@ interface Message {
 
 export function Chat() {
   const navigate = useNavigate()
-  const { owner, repo } = useParams<{ owner: string; repo: string }>()
+  const { owner, repo, subName } = useParams<{ owner: string; repo: string, subName?: string }>()
   const { isConnected, sendMessage, lastMessage, disconnect, isProcessing, connect } = useWebSocket()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
@@ -85,7 +85,7 @@ export function Chat() {
 
       connectionAttemptedRef.current = true
       try {
-        await connect(owner, repo)
+        await connect(owner, repo, subName)
         setConnectionError("")
       } catch (err) {
         console.error('Failed to connect:', err)
@@ -99,7 +99,7 @@ export function Chat() {
       connectionAttemptedRef.current = false
       welcomeMessageShownRef.current = false
     }
-  }, [owner, repo])
+  }, [owner, repo, subName])
 
   const addMessage = (content: string, role: 'user' | 'assistant') => {
     setMessages(prev => [...prev, { content, role }])

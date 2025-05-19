@@ -6,11 +6,8 @@ interface ExampleRepo {
 }
 
 const EXAMPLE_REPOS: ExampleRepo[] = [
-  { name: "TalkToGithub", url: "https://github.com/HarishChandran3304/TTG" },
-  { name: "GitIngest", url: "https://github.com/cyclotruc/gitingest" },
-  { name: "Apple-MCP", url: "https://github.com/Dhravya/apple-mcp" },
-  { name: "Bruno", url: "https://github.com/usebruno/bruno" },
-  { name: "easyEdits", url: "https://github.com/robinroy03/easyEdits" },
+  { name: "yeoshin-backend-v2_backend", url: "https://github.com/fastlane-dev/yeoshin-backend-v2/backend" },
+  { name: "yeoshin-backend-v2_admin", url: "https://github.com/fastlane-dev/yeoshin-backend-v2/admin" },
 ]
 
 interface ExampleReposProps {

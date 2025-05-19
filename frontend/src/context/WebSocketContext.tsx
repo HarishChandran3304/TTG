@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import config from '../config';
 
 interface WebSocketContextType {
-  connect: (owner: string, repo: string) => Promise<void>;
+  connect: (owner: string, repo: string, subName?: string) => Promise<void>;
   disconnect: () => void;
   sendMessage: (message: string) => void;
   isConnected: boolean;
@@ -39,7 +39,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const connect = async (owner: string, repo: string) => {
+  const connect = async (owner: string, repo: string, subName?: string) => {
     // Prevent multiple simultaneous connection attempts
     if (connectingRef.current || isConnected) {
       return;
@@ -48,7 +48,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     return new Promise<void>((resolve, reject) => {
       try {
         connectingRef.current = true;
-        
+
         // Clean up any existing connection first
         if (socket) {
           socket.close();
@@ -58,7 +58,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         }
 
         const clientId = nanoid(10);
-        const ws = new WebSocket(`${config.API_URL}/${owner}/${repo}/${clientId}`);
+        const url = subName?
+            `${config.API_URL}/${owner}/${repo}/${subName}/${clientId}`
+            : `${config.API_URL}/${owner}/${repo}/${clientId}`
+
+        const ws = new WebSocket(url);
 
         const timeout = setTimeout(() => {
           connectingRef.current = false;
