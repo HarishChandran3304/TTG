@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import logging
 
 from src.utils.cache import load_repo_cache, save_repo_cache
-from src.utils.ingest import ingest_repo
+from src.utils.ingest import ingest_repo, pull_repo
 from src.utils.llm import initialize_chat, send_chat_message, generate_response
 from src.utils.prompt import generate_prompt
 
@@ -60,7 +60,7 @@ class ConnectionManager:
 		"""
 
     async def connect(
-            self, websocket: WebSocket, client_id: str, owner: str, repo: str
+            self, websocket: WebSocket, client_id: str, owner: str, repo: str, name: str = ""
     ) -> None:
         await websocket.accept()
 
@@ -68,16 +68,16 @@ class ConnectionManager:
             await self.active_connections[client_id]["websocket"].close()
             del self.active_connections[client_id]
         # Try to load from cache first
-        cached = load_repo_cache(owner, repo)
+        cached = load_repo_cache(owner, repo, name)
         if cached:
             summary, tree, content = cached["summary"], cached["tree"], cached["content"]
-            logging.info(f"Loaded repo from cache: {owner}-{repo}")
+            logging.info(f"Loaded repo from cache: {owner}_{repo}_{name}")
         else:
             try:
-                summary, tree, content = await ingest_repo(owner, repo)
-                logging.info(f"Repo processed - {owner}-{repo}!")
+                summary, tree, content = await ingest_repo(owner, repo, name)
+                logging.info(f"Repo processed - {owner}_{repo}_{name}!")
                 logging.info(f"Repository Summary:\n{summary}")
-                save_repo_cache(owner, repo, summary, tree, tree)
+                save_repo_cache(owner, repo, name, summary, tree, tree)
             except ValueError as e:
                 error_msg = str(e)
                 if error_msg == "error:repo_too_large":
@@ -93,10 +93,10 @@ class ConnectionManager:
 
         prompt = await generate_prompt("Please response in korean.", [], tree, content)
         print(f"====================prompt initialized.")
-        print(prompt)
+        # print(prompt)
         chat = await initialize_chat(prompt)
         print(f"====================chat initialized.")
-        print(chat)
+        # print(chat)
 
         self.active_connections[client_id] = {
             "websocket": websocket,
@@ -150,6 +150,34 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+@app.websocket("/{owner}/{repo}/{name}/{client_id}")
+async def websocket_endpoint(
+        websocket: WebSocket, owner: str, repo: str, name: str, client_id: str
+) -> None:
+    try:
+        await manager.connect(websocket, client_id, owner, repo, name)
+        print(f"Client {client_id} connected")
+
+        while True:
+            try:
+                text = await websocket.receive_text()
+                if text == "ping":
+                    print(f"Received ping from {client_id}")
+                    continue
+                await manager.handle_message(client_id, text)
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                print(f"Error in websocket_endpoint: {e}")
+                break
+
+    except Exception as e:
+        print(f"Connection error: {e}")
+    finally:
+        await manager.disconnect(client_id)
+        print(f"Client {client_id} disconnected")
+
+
 @app.websocket("/{owner}/{repo}/{client_id}")
 async def websocket_endpoint(
         websocket: WebSocket, owner: str, repo: str, client_id: str
@@ -181,7 +209,6 @@ async def websocket_endpoint(
 @app.get("/healthcheck")
 async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
-
 
 # async def main():
 #     summary, tree, content = await ingest_repo("https://github.com/EnhancedJax/Bagels")

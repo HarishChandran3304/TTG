@@ -3,9 +3,9 @@ import os
 from typing import Any
 
 CACHE_DIR = "/tmp/repo_cache"
-# CACHE_TTL_SECONDS = 6 * 60 * 60  # 6 hours
-CACHE_TTL_SECONDS = 0
+CACHE_TTL_SECONDS = 60 * 30 # 30minutes
 CACHE_MAX_FILES = 100
+
 
 def _enforce_lru_cache_limit():
     files = [
@@ -18,12 +18,14 @@ def _enforce_lru_cache_limit():
         for f, _ in files[:len(files) - CACHE_MAX_FILES]:
             os.remove(os.path.join(CACHE_DIR, f))
 
-def get_cache_path(owner: str, repo: str) -> str:
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    return os.path.join(CACHE_DIR, f"{owner}_{repo}.json")
 
-def load_repo_cache(owner: str, repo: str) -> dict[str, Any] | None:
-    path = get_cache_path(owner, repo)
+def get_cache_path(owner: str, repo: str, name: str) -> str:
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    return os.path.join(CACHE_DIR, f"{owner}_{repo}_{name}.json")
+
+
+def load_repo_cache(owner: str, repo: str, name: str) -> dict[str, Any] | None:
+    path = get_cache_path(owner, repo, name)
     if os.path.exists(path):
         os.utime(path, None)  # Update access time for LRU
         with open(path, "r") as f:
@@ -34,8 +36,9 @@ def load_repo_cache(owner: str, repo: str) -> dict[str, Any] | None:
                 return data
     return None
 
-def save_repo_cache(owner: str, repo: str, summary: Any, tree: Any, content: Any) -> None:
-    path = get_cache_path(owner, repo)
+
+def save_repo_cache(owner: str, repo: str, name: str, summary: Any, tree: Any, content: Any) -> None:
+    path = get_cache_path(owner, repo, name)
     import time
     with open(path, "w") as f:
         json.dump({"summary": summary, "tree": tree, "content": content, "cached_at": time.time()}, f)

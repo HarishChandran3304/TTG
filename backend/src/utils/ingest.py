@@ -12,7 +12,7 @@ from typing import Tuple, List, Set, Optional, Union
 import aiohttp
 from dotenv import load_dotenv
 from git import Repo
-from gitingest import parse_query, clone_repo  # type: ignore
+from gitingest import parse_query, clone_repo
 from gitingest.config import MAX_TOTAL_SIZE_BYTES, MAX_FILES, MAX_DIRECTORY_DEPTH, TMP_BASE_PATH
 from gitingest.filesystem_schema import FileSystemNode, FileSystemNodeType, FileSystemStats
 from gitingest.output_formatters import format_single_file, format_directory
@@ -24,6 +24,7 @@ from src.utils.prompt import generate_prompt
 
 load_dotenv()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+FASTLANE_DEV = "fastlane-dev"
 
 
 async def check_repo_exists(owner: str, name: str) -> bool:
@@ -52,50 +53,59 @@ async def check_repo_exists(owner: str, name: str) -> bool:
             return False
 
 
-async def ingest_repo(owner: str, name: str) -> tuple[str, str, str]:
+async def ingest_repo(owner: str, name: str, sub_name: str) -> tuple[str, str, str]:
     """
     Converts a github repository into LLM-friendly format.
 
     Args:
             owner: owner of repository
             name: name of repository
+            sub_name: sub category of repository
     Returns:
             A tuple containing the summary, the folder structure, and the content of the files in LLM-friendly format.
     """
     try:
-        repo_path = f"/tmp/repo/{owner}-{name}"
+        if not await pull_repo(owner=owner,
+                               name=name,
+                               private=FASTLANE_DEV in owner):
+            raise Exception(f"clone repository({owner}/{name}) failed.")
+
+        patterns = {
+            "fastlane-dev/yeoshin-backend-v2/backend":
+                (
+                    {
+                        "*/backend/*/controller/*",
+                        "*/backend/*/usecase/*",
+                        "*/backend/common/*",
+                        "*/entity/*",
+                        "*/type/*"
+                    },
+                    {
+                        "*/test"
+                    }
+                ),
+            "fastlane-dev/yeoshin-backend-v2/admin":
+                (
+                    {
+                        "*/admin/*/controller/*",
+                        "*/admin/*/usecase/*",
+                        "*/admin/common/*",
+                        "*/entity/*",
+                        "*/type/*"
+                    },
+                    {
+                        "*/test"
+                    }
+                )
+        }
+
+        repo_path = f"/tmp/repo/{owner}_{name}"
+
         summary, tree, content = await ingest_async(
             repo_path,
-            include_patterns={
-                "*Controller.java"
-                "*Service.java",
-                "*UseCase.java",
-                "*Template.java",
-                "*Payload.java",
-                "*Repository.java",
-                # "*.sql"
-            },
-            # exclude_patterns={
-            # "*/test",
-            # "*gradle*",
-            # "*libs*",
-            # "*.xlsx",
-            # "*/manifests",
-            # "Makefile",
-            # ".github",
-            # # "*Repository.java"
-            # }
+            include_patterns=patterns.get(f"{owner}/{name}/{sub_name}", ({}, {}))[0],
+            exclude_patterns=patterns.get(f"{owner}/{name}/{sub_name}", ({}, {}))[1]
         )
-
-        # Check if token count exceeds limit
-        # if "Estimated tokens: " in summary:
-        #     tokens_str = summary.split("Estimated tokens: ")[-1].strip()
-        #     if tokens_str.endswith("M"):
-        #         raise ValueError("error:repo_too_large")
-        #     elif tokens_str.endswith("K"):
-        #         tokens = float(tokens_str[:-1])
-        #         if tokens > 750:
-        #             raise ValueError("error:repo_too_large")
 
         return summary, tree, content
     except Exception as e:
@@ -106,9 +116,10 @@ async def ingest_repo(owner: str, name: str) -> tuple[str, str, str]:
         raise
 
 
-def pull_repo(owner, name):
+async def pull_repo(owner: str, name: str, private=False):
     try:
-        repo_url = f"https://{GITHUB_TOKEN}@github.com/{owner}/{name}.git"
+        repo_url = f"https://{GITHUB_TOKEN}@github.com/{owner}/{name}.git" if private \
+            else f"https://github.com/{owner}/{name}.git"
         repo_path = f"/tmp/repo/{owner}_{name}"
         if os.path.exists(repo_path) and os.path.isdir(os.path.join(repo_path, '.git')):
             print(f"repository {repo_path} already exists.")
@@ -124,7 +135,7 @@ def pull_repo(owner, name):
 
         os.makedirs(repo_path, exist_ok=True)
 
-        repo = Repo.clone_from(repo_url, repo_path)
+        repo = Repo.clone_from(url=repo_url, to_path=repo_path)
         print(f"clone repository({owner}/{name}) success. (HEAD: {repo.head.commit.hexsha})")
         return True
     except Exception as e:
@@ -680,7 +691,8 @@ if __name__ == "__main__":
         # exists = await check_repo_exists("fastlane-dev", "yeoshin-backend-v2")
         # print(exists)
         # pull_repo("fastlane-dev", "yeoshin-backend-v2")
-        summary, tree, content = await ingest_repo("fastlane-dev", "yeoshin-backend-v2")
+        summary, tree, content = await ingest_repo("fastlane-dev", "yeoshin-backend-v2", "backend")
+        # summary, tree, content = await ingest_repo("HarishChandran3304", "TTG", "")
         # print(summary)
         print(tree)
         # print(content)
