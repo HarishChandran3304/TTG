@@ -2,16 +2,6 @@
 
 [![Image](./frontend/public/header.png "TalkToGitHub main page")](https://talktogithub.com)
 
-## ⭐ Star History
-
-<a href="https://star-history.com/#HarishChandran3304/TTG&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HarishChandran3304/TTG&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HarishChandran3304/TTG&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HarishChandran3304/TTG&type=Date" />
-  </picture>
-</a>
-
 <!-- <a href="https://www.producthunt.com/posts/talktogithub?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-talktogithub" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=957930&theme=light&t=1745741597937" alt="TalkToGitHub - Turn&#0032;GitHub&#0032;repositories&#0032;into&#0032;conversations | Product Hunt" style="width: 200px; height: 45px;" width="200" height="45" /></a> -->
 
 [![Discord](https://dcbadge.limes.pink/api/server/https://discord.com/invite/JKtHeSn4S7)](https://discord.com/invite/JKtHeSn4S7)
