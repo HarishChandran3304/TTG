@@ -44,11 +44,25 @@ Prerequisites:
   source ./.venv/bin/activate
   ```
 
-3. Add the following to your `.env` file:
+3. Add the following to your `.env` file (choose either Gemini or OpenAI):
   ```bash
+  # Environment (development or production)
+  ENV=development
+  
+  # Choose which LLM provider to use (gemini or openai)
+  LLM_PROVIDER=gemini  # or openai
+  
+  # Gemini Configuration (if using Gemini)
   GEMINI_API_KEY=<your-gemini-api-key>
   GEMINI_MODEL=gemini-2.0-flash
-  ENV=development
+  
+  # OpenAI Configuration (if using OpenAI)
+  # OPENAI_API_KEY=<your-openai-api-key>
+  # OPENAI_MODEL=gpt-4o-mini  # or gpt-4o, gpt-3.5-turbo, etc.
+  # OPENAI_MAX_TOKENS=4000
+  # OPENAI_TEMPERATURE=0.1
+  
+  # Fallback keys (for Gemini only)
   FALLBACK_COUNT=0
   ```
 
@@ -82,6 +96,7 @@ Check out the [contributing guide](./CONTRIBUTING.md) to learn how to contribute
 - [Python](https://www.python.org/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Gemini](https://gemini.google.com/)
+- [OpenAI](https://openai.com/) (alternative LLM provider)
 
 ## Support
 
