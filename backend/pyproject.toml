@@ -1,7 +1,7 @@
 [project]
 name = "ttg-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "TTG Backend"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
