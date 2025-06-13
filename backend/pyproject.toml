@@ -9,6 +9,7 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "gitingest>=0.1.4",
     "google-genai>=1.9.0",
+    "openai>=1.50.0",
     "websockets>=15.0.1",
 ]
 
